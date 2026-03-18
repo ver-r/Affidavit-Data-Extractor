@@ -1,0 +1,6 @@
+fitz
+easyocr
+python-dotenv
+pillow
+mysql-connector-python
+PyMuPDF
