@@ -1,85 +1,135 @@
 import re
 
+def extract_fields(text):
 
-def extract_regex_fields(text_blocks):
+    result = {
+        "age": None,
+        "mobile": None,
+        "email": None,
+        "pan_number": None,
+        "address": None,
+        "constituency_name": None,
+        "constituency_number": None
+    }
 
-    text = "\n".join(text_blocks)
+    # ---------------------------
+    # MOBILE (anchor)
+    # ---------------------------
+    mobiles = re.findall(r'\b[6-9]\d{9}\b', text)
 
-    data = {}
+    if mobiles:
+        result["mobile"] = mobiles[0]
 
-    # -----------------------
-    # Name + Father Name
-    # -----------------------
-    match = re.search(
-    r'([A-Z][a-zA-Z\s\.]+),?\s*S/o\.?\s*([A-Z][a-zA-Z\s]+)',
-    text
-)
-    if not match:
-    # Fallback: notarial cert format "certify that L. SAMBATH son of Mr. Leela Sekar"
-        match = re.search(
-        r'certify that\s+([A-Z][A-Z\s\.]+)\s+son of\s+(?:Mr\.\s*)?([A-Z][a-zA-Z\s]+),',
-        text
-    )
+        # create local window around the mobile
+        pos = text.find(mobiles[0])
+        start = max(0, pos - 400)
+        end = pos + 1500
 
-    if match:
-        data["full_name"] = match.group(1).strip()
-        data["fathers_name"] = match.group(2).strip()
+        local_text = text[start:end]
 
-    # -----------------------
-    # Age
-    # -----------------------
-    age_match = re.search(r'aged\s*(\d{2})', text, re.I)
-    if not age_match:
-        age_match = re.search(r',\s*aged\s+(\d{1,3})\s+years', text, re.I)
-    if age_match:
-        data["age"] = int(age_match.group(1))
+    else:
+        local_text = text
 
-    # -----------------------
-    # Address
-    # -----------------------
-    addr_match = re.search(
-    r'resident of\s*(.*?\d{3}\s*\d{3})',
-    text,
-    re.I | re.S
-    )
 
-    if addr_match:
-        data["address"] = addr_match.group(1).replace("\n", " ")
-
-    # -----------------------
-    # PAN
-    # -----------------------
-    pan_match = re.search(r'\b[A-Z]{5}[0-9]{4}[A-Z]\b', text)
-
-    if pan_match:
-        data["pan_number"] = pan_match.group(0)
-
-    # -----------------------
-    # Mobile
-    # -----------------------
-    mobile_match = re.search(r'\b[6-9]\d{9}\b', text)
-
-    if mobile_match:
-        data["mobile"] = mobile_match.group(0)
-
-    # -----------------------
-    # Email
-    # -----------------------
-    email_match = re.search(
+    # ---------------------------
+    # EMAIL
+    # ---------------------------
+    emails = re.findall(
         r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}',
-        text
+        local_text
     )
 
-    if email_match:
-        data["email"] = email_match.group(0)
+    if emails:
+        result["email"] = emails[0]
 
-    return data
-def merge_fields(regex_fields, ner_fields):
 
-    merged = regex_fields.copy()
+    # ---------------------------
+    # AGE
+    # ---------------------------
+    m = re.search(r'(\d{2})\s*(?:years|yrs|aged)', local_text, re.I)
 
-    for key, value in ner_fields.items():
-        if value and key not in merged:
-            merged[key] = value
+    if m:
+        age = int(m.group(1))
+        if 18 <= age <= 100:
+            result["age"] = age
 
-    return merged
+
+    # ---------------------------
+    # PAN (search whole document)
+    # ---------------------------
+    pans = re.findall(r'[A-Z]{5}[0-9]{4}[A-Z]', text)
+
+    if pans:
+        result["pan_number"] = pans[0]
+
+
+    # ---------------------------
+    # ADDRESS (pincode anchor)
+    # ---------------------------
+    '''
+    pin_match = re.search(r'\b\d{6}\b', text)
+
+    if pin_match:
+        pos = pin_match.start()
+
+        start = max(0, pos - 120)
+        end = pos + 40
+
+        addr = text[start:end]
+        addr = addr.replace("\n", " ")
+
+        if "Certificate" not in addr and "Stamp" not in addr:
+            result["address"] = addr.strip()
+    '''
+    # ---------------------------
+# ADDRESS (search near end)
+# ---------------------------
+
+        # ADDRESS
+    addr_match = re.search(
+        r'(?:residing at|resident of)\s+(No\.?\s*[^.\n]{10,120})',
+        text, re.I
+    )
+    if addr_match:
+        result["address"] = re.sub(r'\s+', ' ', addr_match.group(1)).strip()
+        # ---------------------------
+    # CONSTITUENCY
+    # ---------------------------
+    '''
+    m = re.search(
+    r'from\s+(\d+)\s+([A-Za-z\s]+?)\s+constituency',
+    text,
+    re.I
+)
+
+    if m:
+        result["constituency_number"] = m.group(1)
+        result["constituency_name"] = m.group(2).strip()
+    '''
+    patterns = [
+    r'from\s+(\d+)[,\.]?\s*([A-Za-z][A-Za-z\s]+?)\s+[Cc]onstituency',
+    r'election\s+from\s+(\d+)[,\.]?\s*([A-Za-z][A-Za-z\s]+?)\s+[Cc]onstituency',
+    r'[Cc]onstituency[^\n]*?(\d+)[,\.]?\s*([A-Za-z][A-Za-z\s]+?)\s*[\n,\.]',
+]
+    for pat in patterns:
+        m = re.search(pat, text, re.I)
+        if m:
+            result["constituency_number"] = m.group(1)
+            result["constituency_name"] = m.group(2).strip()
+            break
+
+        
+        
+    # FATHER'S NAME
+    father_match = re.search(
+        r'[Ss]/[Oo]\.?\s+([A-Z][a-zA-Z\s\.]{3,40})',
+        text
+    )
+    if not father_match:
+        father_match = re.search(
+            r'[Ss]on\s+of\s+(?:Mr\.?\s*)?([A-Z][a-zA-Z\s\.]{3,40})',
+            text, re.I
+        )
+    if father_match:
+        result["fathers_name"] = father_match.group(1).strip().split("\n")[0]
+    return result

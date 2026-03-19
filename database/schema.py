@@ -36,5 +36,9 @@ def build_record(
 
         # Metadata — ocr_engine is passed in, NEVER hardcoded
         "ocr_engine":          ocr_engine,
-        "extraction_status":   "success" if pan_result.get("pan_number") else "partial",
+        "extraction_status": (
+        "success" if pan_result.get("pan_number") and extracted.get("full_name")
+        else "failed" if not extracted.get("full_name") and not pan_result.get("pan_number")
+        else "partial"
+),
     }

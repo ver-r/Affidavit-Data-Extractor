@@ -7,3 +7,5 @@ pdf2image
 pip install transformers torch sentencepiece protobuf 
 pip install pdfplumber
 indic-transliteration
+python -m spacy download xx_ent_wiki_sm
+flask

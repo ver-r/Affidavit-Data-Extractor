@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS affidavit_extractions (
     ocr_engine          VARCHAR(50),
     extraction_status   VARCHAR(20),    -- 'success' | 'partial' | 'failed'
 
-    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_source_file (source_file)
 );
 """
 
@@ -108,7 +109,10 @@ INSERT INTO affidavit_extractions (
     %(constituency_number)s, %(constituency_name)s, %(affidavit_number)s,
     %(pan_number)s, %(pan_valid)s, %(pan_confidence)s,
     %(ocr_engine)s, %(extraction_status)s
-);
+)
+ON DUPLICATE KEY UPDATE
+    extracted_at       = VALUES(extracted_at),
+    extraction_status  = VALUES(extraction_status);
 """
 
 def insert_extraction(data: dict) -> int:
@@ -122,7 +126,10 @@ def insert_extraction(data: dict) -> int:
         cursor.execute(INSERT_SQL, data)
         conn.commit()
         row_id = cursor.lastrowid
-        print(f"[mysql_handler] Inserted row ID: {row_id}")
+        if row_id:
+            print(f"[mysql_handler] Inserted row ID: {row_id}")
+        else:
+            print(f"[mysql_handler] Duplicate skipped: {data.get('source_file')}")
         return row_id
     except Error as e:
         conn.rollback()

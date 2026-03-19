@@ -1,71 +1,76 @@
-import sys
-import json
-from datetime import datetime
-
-from extractor.ocr_engine import pdf_to_images, extract_text_from_images
-from extractor.ner_extractor import run_ner
-from extractor.field_extractor import extract_regex_fields, merge_fields
-from extractor.pan_validator import extract_pan
-
+import os
+import glob
+from extractor.pdf_extractor import extract_text_pages, extract_name
+from extractor.field_extractor import extract_fields
+from extractor.ocr_extractor import run_ocr
+from extractor.pan_validator import build_pan_result
+from utils.transliterate import tamil_to_english
+from utils.csv_writer import write_csv
+from utils.logger import get_logger
 from database.schema import build_record
-from database.mysql_handler import setup_database, insert_extraction
+from database.mysql_handler import insert_extraction
+from database.mysql_handler import setup_database
 
+log = get_logger()
+
+setup_database()  
 
 def process_pdf(pdf_path):
 
-    print("\nProcessing:", pdf_path)
+    log.info(f"Processing: {pdf_path}")
+    
+    pdf_text = extract_text_pages(pdf_path)
+    name = extract_name(pdf_text)
+    ocr_text = run_ocr(pdf_path)
+    ocr_text = tamil_to_english(ocr_text)
+    combined_text = pdf_text + "\n" + ocr_text
+    fields = extract_fields(combined_text)
+    result = {
+        "full_name": name,
+        **fields
+    }
+    pan_result = build_pan_result(fields.get("pan_number"))
 
-    # OCR
-    images = pdf_to_images(pdf_path)
-    text_blocks = extract_text_from_images(images)
-    important_pages = []
+    log.info(f"Extracted: {result}")
+    log.info(f"PAN validation: {pan_result}")
 
-    if len(text_blocks) >= 1:
-        important_pages.append(text_blocks[0])  # page 1
+    return result, pan_result
 
-    if len(text_blocks) >= 2:
-        important_pages.append(text_blocks[1])  # page 2
 
-    if len(text_blocks) >= 11:
-        important_pages.append(text_blocks[10])  # page 11
+def main():
 
-    focused_text = important_pages
-    # NER
-    ner_fields = run_ner(focused_text)
-    print("NER:", ner_fields)
+    current_folder = os.path.dirname(os.path.abspath(__file__))
+    pdf_files = glob.glob(os.path.join(current_folder, "*.pdf"))
+    if not pdf_files:
+        log.warning("No PDFs found in folder.")
+        return
 
-    # REGEX
-    regex_fields = extract_regex_fields(focused_text)
-    print("REGEX:", regex_fields)
+    log.info(f"Found {len(pdf_files)} PDFs")
 
-    fields = merge_fields(regex_fields, ner_fields)
+    all_records = []
 
-    # PAN
-    pan_result = extract_pan(focused_text)
+    for pdf in pdf_files:
+        try:
+            extracted, pan_result = process_pdf(pdf)
+            if not pan_result.get("pan_number"):
+                log.warning(f"No PAN found in {os.path.basename(pdf)}, skipping DB insert.")
+                continue
+            record = build_record(
+                extracted=extracted,
+                pan_result=pan_result,
+                source_file=os.path.basename(pdf),
+                ocr_engine="tesseract"
+            )
+            insert_extraction(record)
+            all_records.append(record)
+        except Exception as e:
+            log.error(f"Failed to process {pdf}: {e}")
 
-    print("PAN:", pan_result)
-
-    record = build_record(
-        extracted=fields,
-        pan_result=pan_result,
-        source_file=pdf_path,
-        ocr_engine="tesseract"
-    )
-
-    row_id = insert_extraction(record)
-
-    output = record.copy()
-    output["db_row_id"] = row_id
-    output["extracted_at"] = str(datetime.now())
-
-    print(json.dumps(output, indent=2))
-
-    return output
-
+    if all_records:
+        write_csv(all_records, output_dir=current_folder)
+        log.info(f"CSV written with {len(all_records)} records.")
+    else:
+        log.warning("No records to write.")
 
 if __name__ == "__main__":
-
-    pdf_path =r"E:\Affidavit-Data-Extractor\Affidavit-1773840643.pdf"
-    setup_database()
-
-    process_pdf(pdf_path)
+    main()
