@@ -1,6 +1,9 @@
-fitz
-easyocr
 python-dotenv
 pillow
 mysql-connector-python
 PyMuPDF
+pytesseract
+pdf2image
+pip install transformers torch sentencepiece protobuf 
+pip install pdfplumber
+indic-transliteration
