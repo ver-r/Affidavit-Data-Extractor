@@ -287,14 +287,13 @@ Ariankuppam,CQAPR3283E,1,high,success
 ```
 
 ### Field Extraction
-[Sample console output screenshots](outputs/console_output1.png)(outputs/console_output2.png)
+![Sample console output screenshots](outputs/console_output1.png)(outputs/console_output2.png)
 
 ### SQL Database Sample
-[Sample database table output screenshots](outputs/sql_output.png)
+![Sample database table output screenshots](outputs/sql_output.png)
 
 ### API working
-[Sample api output screenshots](outputs/api_output.png)
-
+![Sample api output screenshots](outputs/api_output.png)
 
 
 ### Confidence Scoring (0.0 - 1.0)
