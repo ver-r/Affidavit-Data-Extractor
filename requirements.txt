@@ -9,3 +9,5 @@ pip install pdfplumber
 indic-transliteration
 python -m spacy download xx_ent_wiki_sm
 flask
+pip install google-generativeai
+pip install google-genai
