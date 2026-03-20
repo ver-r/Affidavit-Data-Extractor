@@ -19,7 +19,6 @@ AI-powered analysis.
 - [Field Extraction Details](#field-extraction-details)
 - [Known Limitations](#known-limitations)
 - [Future Enhancements](#future-enhancements)
-- [Troubleshooting](#troubleshooting)
 - [Project Structure](#project-structure)
 
 ---
