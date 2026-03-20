@@ -1,5 +1,3 @@
-Here is the complete corrected `README.md`:
-
 ```markdown
 # Affidavit Data Extractor
 
@@ -42,7 +40,7 @@ and extracts:
 The system uses a three-layer extraction approach:
 1. **pdfplumber** — Direct PDF text extraction (fast, always runs)
 2. **Tesseract OCR** — Optical character recognition (always runs, supplements layer 1)
-3. **Groq AI Vision** — AI-powered fallback (only when PAN not found after layers 1+2)
+3. **Groq API** — AI-powered fallback (only when PAN not found after layers 1+2)
 
 All extracted data is stored in MySQL and exported to CSV.
 
@@ -63,31 +61,27 @@ All extracted data is stored in MySQL and exported to CSV.
 
 ## Project Architecture
 
-```
-Affidavit-Data-Extractor/
-├── main.py                    # CLI entry point for batch processing
-├── api/
-│   └── app.py                 # Flask REST API server
-├── requirements.txt           # Python dependencies
-│
-├── extractor/
-│   ├── pdf_extractor.py      # pdfplumber text extraction + name extraction
-│   ├── ocr_extractor.py      # Tesseract & Groq OCR engines
-│   ├── field_extractor.py    # Regex-based field parsing
-│   └── pan_validator.py      # PAN validation & confidence scoring
-│
-├── database/
-│   ├── mysql_handler.py      # MySQL connection, DDL, queries
-│   └── schema.py             # Record schema & transformation
-│
-├── utils/
-│   ├── logger.py             # Logging configuration
-│   ├── csv_writer.py         # CSV export
-│   └── transliterate.py      # Tamil/Hindi transliteration
-│
-├── logs/                      # Auto-created daily log files
-└── .env                       # Environment config (not in repo)
-```
+- **main.py**: CLI entry point for batch processing
+- **api/app.py**: Flask REST API server
+- **requirements.txt**: Python dependencies
+
+- **extractor/**
+  - `pdf_extractor.py`: pdfplumber text extraction + name extraction
+  - `ocr_extractor.py`: Tesseract + Groq OCR engines
+  - `field_extractor.py`: Regex-based field parsing
+  - `pan_validator.py`: PAN validation + confidence scoring
+
+- **database/**
+  - `mysql_handler.py`: MySQL connection, DDL, queries
+  - `schema.py`: Record schema & transformation
+
+- **utils/**
+  - `logger.py`: Logging configuration
+  - `csv_writer.py`: CSV export
+  - `transliterate.py`: Tamil/Hindi transliteration
+
+- **logs/**: Auto-created daily log files
+- **.env**: Environment config (not included in repository)
 
 ---
 
@@ -279,6 +273,8 @@ curl -X POST http://127.0.0.1:5000/extract \
 
 ### CSV Sample
 
+![Sample CSV output screenshot](docs/sample-csv-output.png)
+
 ```csv
 source_file,full_name,fathers_name,age,address,mobile,constituency_number,
 constituency_name,pan_number,pan_valid,pan_confidence,extraction_status
@@ -343,7 +339,7 @@ Extracted using relationship patterns:
 
 ---
 
-## Known Limitations
+## Limitations
 
 ### 1. PAN Confidence Score
 The confidence score is based purely on **regex pattern analysis** — it cannot 
@@ -368,7 +364,7 @@ Not all fields are extracted for every document:
 - **Age**: May be missed if written in regional language format
 - **Address**: Only extracted if "residing at" or "resident of" phrase present
 - **Constituency**: Only extracted from English text portions
-- **Father's name**: May be missed for Tamil-only affidavits
+- **Father's name**: May be missed for  affidavits
 
 ### 5. Non-ECI Documents
 Documents that are not Form 26 ECI affidavits (nomination receipts, 
@@ -421,45 +417,6 @@ These languages are currently installed with the tesseractpackage.
 
 ---
 
-## Troubleshooting
-
-### "No module named 'mysql.connector'"
-```bash
-pip install mysql-connector-python
-```
-
-### Tesseract errors / TESSDATA_PREFIX
-```python
-# Add to top of ocr_extractor.py
-import os
-os.environ['TESSDATA_PREFIX'] = r'C:\Program Files\Tesseract-OCR\tessdata'
-```
-
-### MySQL connection refused
-```bash
-# Check MySQL is running
-# Windows:
-net start mysql
-
-# Linux:
-sudo service mysql status
-```
-
-### No PAN found warnings
-- Verify PDF is a valid ECI Form 26 affidavit
-- Check `logs/YYYYMMDD.log` for detailed error
-
-### Groq API rate limit errors
-- Free tier has daily limits
-- Wait 24 hours for quota reset
-- Tesseract will still run as primary OCR
-
-### Unicode errors on Windows console
-Expected for Hindi/Tamil text in logs. 
-Log file at `logs/YYYYMMDD.log` captures full text correctly in UTF-8.
-
----
-
 ## Project Structure Summary
 
 | File | Purpose |
@@ -477,8 +434,3 @@ Log file at `logs/YYYYMMDD.log` captures full text correctly in UTF-8.
 | `utils/transliterate.py` | Transliteration |
 
 ---
-
-**Version**: 1.0.0  
-**Last Updated**: March 2026  
-**Data Source**: https://affidavit.eci.gov.in/
-```
