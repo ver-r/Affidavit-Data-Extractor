@@ -1,4 +1,3 @@
-```markdown
 # Affidavit Data Extractor
 
 An intelligent document processing system that automatically extracts key information 
@@ -262,9 +261,9 @@ curl -X POST http://127.0.0.1:5000/extract \
 
 **Error Responses:**
 ```json
-{ "error": "No file uploaded" }                    // 400
-{ "error": "Only PDF files accepted" }             // 400
-{ "error": "No PAN found, record not saved" }      // 422
+{ "error": "No file uploaded" }                  
+{ "error": "Only PDF files accepted" }             
+{ "error": "No PAN found, record not saved" }      
 ```
 
 ---
@@ -273,7 +272,7 @@ curl -X POST http://127.0.0.1:5000/extract \
 
 ### CSV Sample
 
-![Sample CSV output screenshot](docs/sample-csv-output.png)
+![Sample CSV output screenshot](outputs/csv_output.png)
 
 ```csv
 source_file,full_name,fathers_name,age,address,mobile,constituency_number,
@@ -287,45 +286,16 @@ Affidavit-1773840856.pdf,A RAGUNATHAN,,45,,7845836004,19,
 Ariankuppam,CQAPR3283E,1,high,success
 ```
 
-### PAN Validation Output
+### Field Extraction
+[Sample console output screenshots](outputs/console_output1.png)(outputs/console_output2.png)
 
-```json
-{
-  "pan_number": "BQMPS0009L",
-  "is_valid": true,
-  "confidence": "high",
-  "confidence_score": 1.0,
-  "note": "Extracted cleanly"
-}
-```
+### SQL Database Sample
+[Sample database table output screenshots](outputs/sql_output.png)
 
-```json
-{
-  "pan_number": "ESZPB2277K",
-  "is_valid": true,
-  "confidence": "medium",
-  "confidence_score": 0.7,
-  "note": "OCR corrected — manual verification recommended"
-}
-```
+### API working
+[Sample api output screenshots](outputs/api_output.png)
 
----
 
-## Field Extraction Details
-
-### Name Extraction
-Extracted from the `Purchased by` field of the e-Stamp certificate 
-on page 1 of every ECI affidavit.
-
-### Father's / Spouse's Name
-Extracted using relationship patterns:
-- `S/O` (son of), `D/O` (daughter of), `W/O` (wife of)
-- `son of Mr.`, `wife of`, `husband of`
-
-### PAN Extraction
-- **Format**: `AAAAA9999A` (5 letters + 4 digits + 1 letter)
-- **Candidate PAN**: Always row 1 in the income declaration table
-- **OCR Correction**: Common misreads fixed (0→O, 1→I, 2→Z, 5→S, 8→B)
 
 ### Confidence Scoring (0.0 - 1.0)
 
