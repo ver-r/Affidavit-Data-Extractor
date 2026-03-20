@@ -1,13 +1,10 @@
-python-dotenv
-pillow
 mysql-connector-python
-PyMuPDF
-pytesseract
-pdf2image
-pip install transformers torch sentencepiece protobuf 
-pip install pdfplumber
+python-dotenv
 indic-transliteration
-python -m spacy download xx_ent_wiki_sm
 flask
-pip install google-generativeai
-pip install google-genai
+pytesseract
+groq
+pdfplumber
+pypdfium2
+Pillow
+requests
