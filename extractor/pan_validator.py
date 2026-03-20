@@ -1,3 +1,4 @@
+#extractor/pan_validator.py
 import re
 
 PAN_PATTERN = re.compile(r'^[A-Z]{5}[0-9]{4}[A-Z]$')
@@ -6,6 +7,7 @@ def validate_pan(pan):
     if not pan:
         return False
     return bool(PAN_PATTERN.match(pan))
+
 def build_pan_result(pan, corrected=False):
     if not pan or not validate_pan(pan):
         return {
@@ -25,9 +27,7 @@ def build_pan_result(pan, corrected=False):
 
     score = round(min(score, 1.0), 2)
     confidence = "high" if score >= 0.8 else "medium" if score >= 0.6 else "low"
-
     note = "OCR corrected — manual verification recommended" if corrected else "Extracted cleanly"
-
     return {
         "pan_number": pan,
         "is_valid": True,

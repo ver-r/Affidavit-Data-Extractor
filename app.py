@@ -23,10 +23,7 @@ def extract():
         tmp_path = tmp.name
 
     try:
-        # FIX 1: unpack tuple
         extracted, pan_result = process_pdf(tmp_path)
-
-        # FIX 2: check PAN before inserting
         if not pan_result.get("pan_number"):
             log.warning(f"No PAN found in uploaded file: {file.filename}")
             return jsonify({"error": "No PAN found, record not saved"}), 422

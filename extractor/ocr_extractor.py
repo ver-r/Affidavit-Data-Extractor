@@ -13,7 +13,6 @@ load_dotenv()
 
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-
 def run_ocr(pdf_path):
     doc = pdfium.PdfDocument(pdf_path)
     text = ""
@@ -29,13 +28,12 @@ def run_ocr(pdf_path):
     doc.close()
     return text
 
-
 def run_ocr_groq(pdf_path):
     doc = pdfium.PdfDocument(pdf_path)
     all_text = ""
 
     for i, page in enumerate(doc):
-        if i >= 3:  # only first 3 pages, PAN is always early
+        if i >= 3:  # only first 3 pages
             break
 
         bitmap = page.render(scale=150/72)
@@ -65,13 +63,11 @@ def run_ocr_groq(pdf_path):
                     ]
                 }]
             )
-            all_text += response.choices[0].message.content + "\n"
-            time.sleep(1)
-
+            all_text += response.choices[0].message.content + "\n" 
+            time.sleep(1) 
         except Exception as e:
             print(f"[groq] Page {i} error: {e}")
             time.sleep(3)
             continue
-
     doc.close()
     return all_text

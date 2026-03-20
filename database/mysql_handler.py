@@ -14,8 +14,6 @@ DB_CONFIG = {
     "database": os.getenv("MYSQL_DATABASE", "affidavit_db"),
 }
 
-# ── DDL ──────────────────────────────────────────────────────────────────────
-
 CREATE_DB_SQL = "CREATE DATABASE IF NOT EXISTS affidavit_db;"
 
 CREATE_TABLE_SQL = """
@@ -52,10 +50,9 @@ CREATE TABLE IF NOT EXISTS affidavit_extractions (
 );
 """
 
-# ── Connection ────────────────────────────────────────────────────────────────
+#connection handling
 
 def get_connection():
-    """Returns a live MySQL connection using .env credentials."""
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
         if conn.is_connected():
@@ -64,14 +61,8 @@ def get_connection():
         print(f"[mysql_handler] Connection error: {e}")
         raise
 
-
 def setup_database():
-    """
-    Creates the database and table if they don't exist.
-    Call this once at application startup.
-    """
     try:
-        # Connect without specifying DB first, to create it
         conn = mysql.connector.connect(
             host=DB_CONFIG["host"],
             user=DB_CONFIG["user"],
@@ -81,7 +72,6 @@ def setup_database():
         cursor.execute(CREATE_DB_SQL)
         print("[mysql_handler] Database 'affidavit_db' ready.")
 
-        # Now connect with DB selected
         cursor.execute(f"USE {DB_CONFIG['database']};")
         cursor.execute(CREATE_TABLE_SQL)
         conn.commit()
@@ -94,7 +84,7 @@ def setup_database():
         print(f"[mysql_handler] Setup error: {e}")
         raise
 
-# ── Insert ────────────────────────────────────────────────────────────────────
+#insert and query functions
 
 INSERT_SQL = """
 INSERT INTO affidavit_extractions (
@@ -138,8 +128,6 @@ def insert_extraction(data: dict) -> int:
     finally:
         cursor.close()
         conn.close()
-
-
 
 def find_by_pan(pan: str) -> dict | None:
     conn = get_connection()

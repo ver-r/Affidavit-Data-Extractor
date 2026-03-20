@@ -1,7 +1,5 @@
 # extractor/field_extractor.py
-
 import re
-
 
 def clean_ocr_pan(text):
     replacements = {
@@ -10,7 +8,6 @@ def clean_ocr_pan(text):
     pans = re.findall(r'[A-Z]{5}[0-9]{4}[A-Z]', text)
     if pans:
         return pans, False
-
     candidates = re.findall(r'[A-Z0-9]{10}', text)
     valid = []
     for c in candidates:
@@ -28,37 +25,28 @@ def clean_ocr_pan(text):
             valid.append(fixed)
     return valid, True
 
-
 def extract_candidate_pan(text):
     pans, corrected = clean_ocr_pan(text)
-
     if not pans:
         return None, False
-
     if len(pans) == 1:
         return pans[0], corrected
-
     pan_positions = [(text.find(p), p) for p in pans if text.find(p) != -1]
     pan_positions.sort(key=lambda x: x[0])
-
     row1_match = re.search(
         r'(?:^|\n)\s*1[\.\s]\s*[^\n]{0,150}?([A-Z]{5}[0-9]{4}[A-Z])',
         text, re.MULTILINE
     )
     if row1_match:
-        return row1_match.group(1), corrected  # FIXED
-
+        return row1_match.group(1), corrected  
     self_match = re.search(r'\bself\b', text, re.I)
     if self_match:
         for pos, pan in pan_positions:
             if pos > self_match.start():
-                return pan, corrected  # FIXED
-
+                return pan, corrected  
     return (pan_positions[0][1] if pan_positions else None), corrected
 
-
 def extract_fields(text):
-
     result = {
         "age": None,
         "mobile": None,
@@ -146,4 +134,4 @@ def extract_fields(text):
             result["fathers_name"] = father_match.group(1).strip().split("\n")[0]
             break
 
-    return result  # FIXED - was missing
+    return result 
