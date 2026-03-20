@@ -271,26 +271,16 @@ curl -X POST http://127.0.0.1:5000/extract \
 ## Sample Output
 
 ### CSV Sample
-
 ![Sample CSV output screenshot](outputs/csv_output.png)
 
-```csv
-source_file,full_name,fathers_name,age,address,mobile,constituency_number,
-constituency_name,pan_number,pan_valid,pan_confidence,extraction_status
-
-Affidavit-1773840643.pdf,L SAMBATH,Leela Sekar,46,
-"No. S-3 Swasthik Apartment Mudaliarpet",9443287521,18,
-Mudaliarpet,BQMPS0009L,1,high,success
-
-Affidavit-1773840856.pdf,A RAGUNATHAN,,45,,7845836004,19,
-Ariankuppam,CQAPR3283E,1,high,success
-```
-
 ### Field Extraction
-![Sample console output screenshots](outputs/console_output1.png)(outputs/console_output2.png)
+![Sample console output screenshots](outputs/console_output1.png)
+![Sample console output screenshots](outputs/console_output1.png)
+
 
 ### SQL Database Sample
 ![Sample database table output screenshots](outputs/sql_output.png)
+
 
 ### API working
 ![Sample api output screenshots](outputs/api_output.png)
@@ -381,8 +371,6 @@ These languages are currently installed with the tesseractpackage.
 - **Financial Disclosure Parsing**: Extract asset declarations, bank 
   accounts, and liabilities from the financial disclosure sections
 
-- **PAN Deduplication**: Alert when same PAN appears across multiple 
-  affidavit submissions
 
 ---
 
